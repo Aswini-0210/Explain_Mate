@@ -1,4 +1,5 @@
-
+pip install pytesseract fitz tools faiss-cpu
+!pip install PyMuPDF sentence-transformers groq Pillow 
 import fitz  # PyMuPDF
 from sentence_transformers import SentenceTransformer
 import faiss
