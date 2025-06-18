@@ -7,12 +7,6 @@ from groq import Groq
 import os
 import streamlit as st
 
-from PIL import Image
-
-
-# Generate or load a placeholder image
-placeholder_image = Image.open("thumbnail.png")
-st.image(placeholder_image, caption="Project Thumbnail", use_column_width=True)
 
 # Function to add background with an infographic
 def set_background():
