@@ -20,6 +20,7 @@ def set_background():
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
+            background-color: #000;
         }}
         /* Center content styling */
         .center-content {{
@@ -28,7 +29,7 @@ def set_background():
         /* File uploader styling */
         .stFileUploader {{
             border: none;
-            background-color: #000;
+            background-color: #fff;
             color: black !important;
             border-radius: 10px;
             padding: 10px;
@@ -151,6 +152,6 @@ if st.button("Get Answer"):
                         st.error(f"An error occurred while generating the response: {e}")
 st.markdown("---")
 st.markdown(
-    "<div style='text-align: center;'>Made with ❤️ by <b>Your Name</b></div>",
+    "<div style='text-align: center;'>Made with ❤️ by <b>Aswini</b></div>",
     unsafe_allow_html=True
 )
