@@ -1,4 +1,8 @@
-%%writefile app.py
+with open("app.py", "w") as f:
+    f.write("""
+    # Paste your entire Python code here without `%%writefile app.py`.
+    """)
+
 
 import fitz  # PyMuPDF
 from sentence_transformers import SentenceTransformer
