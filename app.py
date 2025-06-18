@@ -1,3 +1,4 @@
+%%writefile app.py
 
 import fitz  # PyMuPDF
 from sentence_transformers import SentenceTransformer
@@ -6,6 +7,48 @@ import numpy as np
 from groq import Groq
 import os
 import streamlit as st
+
+# Function to set the background and styling
+def set_background_and_style():
+    st.markdown(
+        """
+        <style>
+        /* Set background color */
+        .stApp {
+            background-color: black;
+        }
+
+        /* Change text color */
+        .stApp, h1, h2, h3, h4, h5, h6, p, div, label, input {
+            color: white;
+        }
+
+        /* Customize buttons */
+        .stButton>button {
+            background-color: #6c63ff;
+            color: white;
+            border-radius: 10px;
+            padding: 10px 20px;
+            border: none;
+            font-size: 16px;
+        }
+        .stButton>button:hover {
+            background-color: #5751d4;
+            cursor: pointer;
+        }
+
+        /* Style file uploader */
+        .stFileUploader {
+            border: 2px dashed #6c63ff;
+            padding: 10px;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+# Apply the background styling
+set_background_and_style()
 
 # Function to extract text from a PDF file object
 def extract_text_from_pdf(pdf_file_path):
@@ -32,8 +75,8 @@ if not api_key:
 client = Groq(api_key=api_key)
 
 # Streamlit app
-st.title("PDF Chatbot")
-st.write("Upload a PDF and ask questions about its content.")
+st.title("📄 Explain Mate")
+st.write("✨ Your friendly PDF assistant! Upload a document and let me handle the questions. 🎉")
 
 # File upload section
 pdf_file = st.file_uploader("Upload your PDF file", type="pdf")
