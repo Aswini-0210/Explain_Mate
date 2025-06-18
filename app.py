@@ -20,7 +20,7 @@ def set_background():
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            background-color: #000;
+            
         }}
         /* Center content styling */
         .center-content {{
