@@ -2,5 +2,4 @@ streamlit
 PyMuPDF
 sentence-transformers
 faiss-cpu
-pytesseract
-Pillow
+groq
