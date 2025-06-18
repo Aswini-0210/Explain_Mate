@@ -11,7 +11,7 @@ from PIL import Image
 
 
 # Generate or load a placeholder image
-placeholder_image = Image.open("images/placeholder_thumbnail.png")
+placeholder_image = Image.open("thumbnail.png")
 st.image(placeholder_image, caption="Project Thumbnail", use_column_width=True)
 
 # Function to add background with an infographic
