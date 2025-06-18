@@ -147,3 +147,8 @@ if st.button("Get Answer"):
                         st.success(response)
                     except Exception as e:
                         st.error(f"An error occurred while generating the response: {e}")
+st.markdown("---")
+st.markdown(
+    "<div style='text-align: center;'>Made with ❤️ by <b>Aswini</b></div>",
+    unsafe_allow_html=True
+)
