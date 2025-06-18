@@ -1,9 +1,4 @@
-with open("app.py", "w") as f:
-    f.write("""
-    # Paste your entire Python code here without `%%writefile app.py`.
-    """)
-
-
+import base64
 import fitz  # PyMuPDF
 from sentence_transformers import SentenceTransformer
 import faiss
@@ -12,47 +7,53 @@ from groq import Groq
 import os
 import streamlit as st
 
-# Function to set the background and styling
-def set_background_and_style():
+
+# Function to add background with an infographic
+def set_background():
+    with open("/content/9743528.png", "rb") as file:
+        encoded_image = base64.b64encode(file.read()).decode()
     st.markdown(
-        """
+        f"""
         <style>
-        /* Set background color */
-        .stApp {
-            background-color: black;
-        }
-
-        /* Change text color */
-        .stApp, h1, h2, h3, h4, h5, h6, p, div, label, input {
-            color: white;
-        }
-
-        /* Customize buttons */
-        .stButton>button {
-            background-color: #6c63ff;
-            color: white;
+        .stApp {{
+            background-image: url("data:image/jpeg;base64,{encoded_image}");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }}
+        /* Center content styling */
+        .center-content {{
+            text-align: center;
+        }}
+        /* File uploader styling */
+        .stFileUploader {{
+            border: none;
+            background-color: #fff;
+            color: black !important;
             border-radius: 10px;
-            padding: 10px 20px;
+            padding: 10px;
+        }}
+        /* Button styling */
+        div.stButton > button:first-child {{
+            background-color: red;
+            color: white;
+            border-radius: 5px;
             border: none;
             font-size: 16px;
-        }
-        .stButton>button:hover {
-            background-color: #5751d4;
-            cursor: pointer;
-        }
-
-        /* Style file uploader */
-        .stFileUploader {
-            border: 2px dashed #6c63ff;
-            padding: 10px;
-        }
+            padding: 10px 20px;
+        }}
+        div.stButton > button:first-child:hover {{
+            background-color: darkred;
+            color: white;
+        }}
         </style>
         """,
         unsafe_allow_html=True
     )
 
-# Apply the background styling
-set_background_and_style()
+
+# Call the background function
+set_background()
 
 # Function to extract text from a PDF file object
 def extract_text_from_pdf(pdf_file_path):
@@ -65,6 +66,7 @@ def extract_text_from_pdf(pdf_file_path):
     except Exception as e:
         st.error(f"Error extracting text from PDF {pdf_file_path}: {e}")
         return ""
+
 
 # Load the sentence transformer model
 model_name = "all-MiniLM-L6-v2"
@@ -79,11 +81,11 @@ if not api_key:
 client = Groq(api_key=api_key)
 
 # Streamlit app
-st.title("📄 Explain Mate")
-st.write("✨ Your friendly PDF assistant! Upload a document and let me handle the questions. 🎉")
+st.markdown('<div class="center-content"><h1>📄 Explain Mate</h1></div>', unsafe_allow_html=True)
+st.markdown('<div class="center-content"><h4>✨ Your friendly PDF assistant! Upload a document and let me handle the questions. 🎉</h4></div>', unsafe_allow_html=True)
 
 # File upload section
-pdf_file = st.file_uploader("Upload your PDF file", type="pdf")
+pdf_file = st.file_uploader("", type="pdf")
 question = st.text_input("Ask your question")
 
 if st.button("Get Answer"):
@@ -149,6 +151,6 @@ if st.button("Get Answer"):
                         st.error(f"An error occurred while generating the response: {e}")
 st.markdown("---")
 st.markdown(
-    "<div style='text-align: center;'>Made with ❤️ by <b>Aswini</b></div>",
+    "<div style='text-align: center;'>Made with ❤️ by <b>Your Name</b></div>",
     unsafe_allow_html=True
 )
