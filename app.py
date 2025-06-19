@@ -123,6 +123,17 @@ st.markdown("<div style='text-align: center; color: white; font-size: 36px;'>�
 st.markdown("<div style='text-align: center; color: white; font-size: 18px;'>✨ Upload a document and let me handle the questions. 🎉</div>", unsafe_allow_html=True)
 
 pdf_file = st.file_uploader("", type="pdf")
+st.markdown(
+    """
+    <style>
+    label {
+        color: white !important;
+        font-size: 16px;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 question = st.text_input("Ask your question")
 
 if st.button("Get Answer"):
