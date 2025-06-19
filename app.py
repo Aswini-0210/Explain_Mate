@@ -63,6 +63,7 @@ def set_background():
             background-position: center center;
             background-repeat: no-repeat;
             background-attachment: fixed;
+             background-color: #000;
         }}
         @media only screen and (max-width: 768px) {{
             .stApp {{
@@ -71,6 +72,7 @@ def set_background():
                 background-position: center center;
                 background-repeat: no-repeat;
                 background-attachment: scroll;
+                 background-color: #000;
             }}
         }}
         /* Center content styling */
@@ -80,7 +82,7 @@ def set_background():
         /* File uploader styling */
         .stFileUploader {{
             border: none;
-            background-color: #000;
+            background-color: #fff;
             color: black !important;
             border-radius: 10px;
             padding: 10px;
