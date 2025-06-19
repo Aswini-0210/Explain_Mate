@@ -12,6 +12,8 @@ import streamlit as st
 dotenv_path = ".env"
 if os.path.exists(dotenv_path):
     load_dotenv(dotenv_path)
+
+# API Key Validation
 api_key = os.getenv("GROQ_API_KEY")
 if not api_key:
     st.error("The GROQ_API_KEY environment variable is not set. Please set it before running the script.")
@@ -19,8 +21,8 @@ if not api_key:
 
 # Set up the background and styles
 def set_background():
-    desktop_image_path = "image.png" 
-    mobile_image_path = "mobile_bg.jpg" 
+    desktop_image_path = "image.png"
+    mobile_image_path = "mobile_bg.jpg"
 
     desktop_image = ""
     mobile_image = ""
@@ -44,7 +46,7 @@ def set_background():
             mobile_image = ""
     else:
         st.warning(f"Mobile background image not found at {mobile_image_path}. Using desktop background for mobile.")
-        mobile_image = desktop_image 
+        mobile_image = desktop_image
 
     st.markdown(
         f"""
