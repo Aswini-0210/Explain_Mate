@@ -97,6 +97,23 @@ def set_background():
             background-color: darkred;
             color: white;
         }}
+        /* PDF text and answer styling */
+        .pdf-text {{
+            color: white;
+            font-size: 16px;
+            background-color: #000; /* Optional: Dark background for PDF text */
+            padding: 10px;
+            border-radius: 10px;
+            margin-top: 10px;
+        }}
+        .answer-box {{
+            color: white;
+            font-size: 16px;
+            background-color: #333; /* Dark background for the answer */
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }}
         </style>
         """,
         unsafe_allow_html=True
@@ -166,6 +183,7 @@ if st.button("Get Answer"):
         if not pdf_content:
             st.error("Could not extract text from the PDF.")
         else:
+            st.markdown(f'<div class="pdf-text">{pdf_content}</div>', unsafe_allow_html=True)
             chunk_size = 200  # Increased chunk size slightly for more context per chunk
             words = pdf_content.split()
             chunks = [" ".join(words[i:i + chunk_size]) for i in range(0, len(words), chunk_size)]
@@ -207,7 +225,8 @@ if st.button("Get Answer"):
                             max_tokens=300, 
                         )
                         response = chat_completion.choices[0].message.content
-                        st.success(response)
+                        st.markdown(f'<div class="answer-box">{response.strip()}</div>', unsafe_allow_html=True)
+                except Exception as e:
                     except Exception as e:
                         st.error(f"An error occurred while generating the response: {e}")
 
