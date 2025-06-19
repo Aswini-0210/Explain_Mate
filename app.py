@@ -73,15 +73,20 @@ def extract_text_from_pdf(pdf_file_path):
         return ""
 
 
-# Load the sentence transformer model
-try:
-    model_name = "all-MiniLM-L6-v2"
-    model = SentenceTransformer(model_name, device="cpu")
-    model.to_empty()  # Workaround for meta tensor issue
-except Exception as e:
-    st.error(f"Error loading Sentence Transformer model: {e}")
-    st.stop()
+# Safe model loading function
+def load_model_safely(model_name):
+    try:
+        # Ensure the model loads explicitly on CPU
+        model = SentenceTransformer(model_name, device="cpu")
+        return model
+    except Exception as e:
+        st.error(f"Error loading Sentence Transformer model: {e}")
+        st.stop()
 
+
+# Load the model
+model_name = "all-MiniLM-L6-v2"
+model = load_model_safely(model_name)
 
 # Initialize Groq client with API key from environment variable
 api_key = os.getenv("GROQ_API_KEY")
