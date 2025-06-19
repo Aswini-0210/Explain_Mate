@@ -65,6 +65,8 @@ def set_background():
         div[data-testid="stFileUploader"] {{
             background-color: transparent !important; /* Removes white background */
             color: white !important; /* Ensures text inside is white */
+            border: none !important; /* Removes any border */
+            outline: none !important; /* Removes the dotted outline on focus or hover */
             border-radius: 10px; /* Rounded corners */
             padding: 10px; /* Padding inside the uploader */
         }}
