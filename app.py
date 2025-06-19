@@ -8,13 +8,11 @@ dotenv_path = os.path.join(os.getcwd(), ".env")
 if os.path.exists(dotenv_path):
     load_dotenv(dotenv_path)
 else:
-    # If .env is not found, check if the API key is set as an environment variable directly
     if not os.getenv("GROQ_API_KEY"):
         print("Warning: .env file not found and GROQ_API_KEY environment variable is not set.")
         print("Please add a .env file with GROQ_API_KEY=your_actual_api_key_here or set the environment variable.")
 
 api_key = os.getenv("GROQ_API_KEY")
-# print(api_key) # Avoid printing API keys in production
 
 import base64
 import fitz  # PyMuPDF
@@ -26,9 +24,8 @@ import os
 import streamlit as st
 
 def set_background():
-    desktop_image_path = "image.png" # Assuming your image is here
-    # Replace "mobile_bg.jpg" with your actual mobile background image path if needed
-    mobile_image_path = "mobile_bg.jpg" # Example path
+    desktop_image_path = "image.png" 
+    mobile_image_path = "mobile_bg.jpg" 
 
     desktop_image = ""
     mobile_image = ""
@@ -128,11 +125,29 @@ if not api_key:
 
 client = Groq(api_key=api_key)
 
-# Streamlit app interface
-st.markdown('<div class="center-content"><h1>📄 Explain Mate</h1></div>', unsafe_allow_html=True)
-st.markdown('<div class="center-content"><h4>✨ Your friendly PDF assistant! Upload a document and let me handle the questions. 🎉</h4></div>', unsafe_allow_html=True)
+
+st.markdown(
+    '<div class="center-content" style="color: white; font-size: 36px; font-weight: bold;">📄 Explain Mate</div>',
+    unsafe_allow_html=True
+)
+st.markdown(
+    '<div class="center-content" style="color: white; font-size: 18px;">✨ Your friendly PDF assistant! Upload a document and let me handle the questions. 🎉</div>',
+    unsafe_allow_html=True
+)
 
 pdf_file = st.file_uploader("", type="pdf")
+st.markdown(
+    """
+    <style>
+    label {
+        color: white !important;
+        font-size: 16px;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 question = st.text_input("Ask your question")
 
 if st.button("Get Answer"):
@@ -146,7 +161,7 @@ if st.button("Get Answer"):
             f.write(pdf_file.getbuffer())
 
         pdf_content = extract_text_from_pdf(temp_pdf_path)
-        os.remove(temp_pdf_path)  # Remove temporary file
+        os.remove(temp_pdf_path) 
 
         if not pdf_content:
             st.error("Could not extract text from the PDF.")
@@ -163,10 +178,10 @@ if st.button("Get Answer"):
                 index = faiss.IndexFlatL2(dimension)
                 index.add(embeddings)
 
-                # Generate embedding for the user query
+              
                 query_embedding = model.encode([question], convert_to_numpy=True)
 
-                # Search for relevant chunks
+              
                 k = min(5, len(chunks)) # Get up to 5 most relevant chunks
                 distances, indices = index.search(query_embedding, k=k)
                 context_chunks = [chunks[i] for i in indices[0]]
@@ -198,7 +213,7 @@ if st.button("Get Answer"):
 
 st.markdown("---")
 st.markdown(
-    "<div style='text-align: center;'>Made with ❤️ by <b>Aswini</b></div>",
+    "<div style='text-align: center;color: white;'>Made with ❤️ by <b>Aswini</b></div>",
     unsafe_allow_html=True
 )
 
