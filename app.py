@@ -79,7 +79,7 @@ def set_background():
         /* File uploader styling */
         .stFileUploader {{
             border: none;
-            background-color: #fff;
+            background-color: #000;
             color: black !important;
             border-radius: 10px;
             padding: 10px;
