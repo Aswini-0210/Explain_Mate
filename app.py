@@ -18,8 +18,15 @@ def set_background():
         .stApp {{
             background-image: url("data:image/jpeg;base64,{encoded_image}");
             background-size: cover;
-            background-position: center;
+            background-position: center center;
             background-repeat: no-repeat;
+            background-attachment: fixed;
+        }}
+        @media only screen and (max-width: 768px) {{
+            .stApp {{
+                background-size: 100% auto; /* Ensures vertical fit */
+                background-attachment: scroll; /* Adjusts for scrolling on mobile */
+            }}
         }}
         /* Center content styling */
         .center-content {{
