@@ -10,7 +10,6 @@ import torch
 
 # Function to add responsive background and custom styling
 def set_background():
-    # Assuming desktop_image.png and mobile_image.png exist in the same directory
     with open("image.png", "rb") as desktop_file:
         desktop_image = base64.b64encode(desktop_file.read()).decode()
     with open("mobile_bg.jpg", "rb") as mobile_file:
@@ -86,6 +85,12 @@ def extract_text_from_pdf(pdf_file_path):
         st.error(f"Error extracting text from PDF {pdf_file_path}: {e}")
         return ""
 
+
+# Function to summarize response
+def summarize_response(response, max_length=500):
+    return response[:max_length] + "..." if len(response) > max_length else response
+
+
 # Call the background function
 set_background()
 
@@ -103,37 +108,37 @@ if st.button("Get Answer"):
     elif not question:
         st.error("Please enter a question.")
     else:
-        # Save uploaded PDF as a temporary file
         with open("temp.pdf", "wb") as f:
             f.write(pdf_file.getbuffer())
-
-        # Extract text from the uploaded PDF
         pdf_content = extract_text_from_pdf("temp.pdf")
-        os.remove("temp.pdf")  # Remove temporary file
-
+        os.remove("temp.pdf")
+        
         if not pdf_content:
             st.error("Could not extract text from the PDF.")
         else:
-            # Process the PDF content into chunks and create embeddings
-            chunk_size = 100
             words = pdf_content.split()
-            chunks = [" ".join(words[i:i + chunk_size]) for i in range(0, len(words), chunk_size)]
-
-            embeddings = model.encode(chunks)
-            dimension = embeddings.shape[1]
-            index = faiss.IndexFlatL2(dimension)
-            index.add(embeddings)
-
-            # Generate embedding for the user query
-            query_embedding = model.encode([question])
-
-            # Search for relevant chunks
-            k = min(5, len(chunks))
-            distances, indices = index.search(query_embedding, k=k)
-            context_chunks = [chunks[i] for i in indices[0]]
-            context = " ".join(context_chunks)
-
-            st.success(f"Context for your question: {context}")
+            chunks = [" ".join(words[i:i + 100]) for i in range(0, len(words), 100)]
+            
+            # Filter relevant chunks
+            relevant_chunks = [chunk for chunk in chunks if 'IPL' in chunk or 'Premier League' in chunk]
+            context = " ".join(relevant_chunks)
+            
+            if not context:
+                st.error("No relevant context found.")
+            else:
+                try:
+                    # Generate response from the model
+                    chat_completion = client.chat.completions.create(
+                        messages=[
+                            {"role": "system", "content": "You are a precise assistant. Provide short, accurate answers based on the provided context."},
+                            {"role": "user", "content": f"Context: {context}\n\nQuestion: {question}"}
+                        ],
+                        model="llama3-8b-8192",
+                    )
+                    response = chat_completion.choices[0].message.content
+                    st.success(summarize_response(response.strip()))
+                except Exception as e:
+                    st.error(f"An error occurred: {e}")
 
 st.markdown("---")
 st.markdown(
