@@ -10,7 +10,7 @@ import streamlit as st
 
 # Function to add background with an infographic
 def set_background():
-    with open("image.jpg", "rb") as file:
+    with open("image.png", "rb") as file:
         encoded_image = base64.b64encode(file.read()).decode()
     st.markdown(
         f"""
