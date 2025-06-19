@@ -65,7 +65,6 @@ def set_background():
         div[data-testid="stFileUploader"] {{
             background-color: transparent !important; /* Removes white background */
             color: white !important; /* Ensures text inside is white */
-            border: 2px dashed #ffffff; /* Optional: Adds a dashed white border */
             border-radius: 10px; /* Rounded corners */
             padding: 10px; /* Padding inside the uploader */
         }}
