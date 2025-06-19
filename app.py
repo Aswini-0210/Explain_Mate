@@ -1,7 +1,6 @@
 from IPython import get_ipython
 from IPython.display import display
 import os
-
 from dotenv import load_dotenv
 import os
 
@@ -14,12 +13,9 @@ else:
         print("Warning: .env file not found and GROQ_API_KEY environment variable is not set.")
         print("Please add a .env file with GROQ_API_KEY=your_actual_api_key_here or set the environment variable.")
 
-
-# Access the API key
 api_key = os.getenv("GROQ_API_KEY")
 # print(api_key) # Avoid printing API keys in production
 
-# %%
 import base64
 import fitz  # PyMuPDF
 from sentence_transformers import SentenceTransformer
@@ -28,10 +24,7 @@ import numpy as np
 from groq import Groq
 import os
 import streamlit as st
-# import torch # Removed unused import
 
-
-# Function to add responsive background and custom styling
 def set_background():
     desktop_image_path = "image.png" # Assuming your image is here
     # Replace "mobile_bg.jpg" with your actual mobile background image path if needed
@@ -110,11 +103,8 @@ def set_background():
         unsafe_allow_html=True
     )
 
-
-# Call the background function
 set_background()
 
-# Function to extract text from a PDF file object
 def extract_text_from_pdf(pdf_file_path):
     try:
         doc = fitz.open(pdf_file_path)
@@ -126,13 +116,9 @@ def extract_text_from_pdf(pdf_file_path):
         st.error(f"Error extracting text from PDF {pdf_file_path}: {e}")
         return ""
 
-
-# Load the sentence transformer model
-# Using a smaller model for potentially faster inference
 model_name = "all-MiniLM-L6-v2"
 model = SentenceTransformer(model_name)
 
-# Initialize Groq client with API key from environment variable
 api_key = os.getenv("GROQ_API_KEY")
 if not api_key:
     st.error("The GROQ_API_KEY environment variable is not set. Please set it before running the script.")
@@ -144,7 +130,6 @@ client = Groq(api_key=api_key)
 st.markdown('<div class="center-content"><h1>📄 Explain Mate</h1></div>', unsafe_allow_html=True)
 st.markdown('<div class="center-content"><h4>✨ Your friendly PDF assistant! Upload a document and let me handle the questions. 🎉</h4></div>', unsafe_allow_html=True)
 
-# File upload section
 pdf_file = st.file_uploader("", type="pdf")
 question = st.text_input("Ask your question")
 
@@ -154,19 +139,16 @@ if st.button("Get Answer"):
     elif not question:
         st.error("Please enter a question.")
     else:
-        # Save uploaded PDF as a temporary file
         temp_pdf_path = "temp.pdf"
         with open(temp_pdf_path, "wb") as f:
             f.write(pdf_file.getbuffer())
 
-        # Extract text from the uploaded PDF
         pdf_content = extract_text_from_pdf(temp_pdf_path)
         os.remove(temp_pdf_path)  # Remove temporary file
 
         if not pdf_content:
             st.error("Could not extract text from the PDF.")
         else:
-            # Process the PDF content into chunks and create embeddings
             chunk_size = 200  # Increased chunk size slightly for more context per chunk
             words = pdf_content.split()
             chunks = [" ".join(words[i:i + chunk_size]) for i in range(0, len(words), chunk_size)]
@@ -191,7 +173,6 @@ if st.button("Get Answer"):
                 if not context:
                     st.error("Could not find relevant context in the PDF for your question.")
                 else:
-                    # Use the context and question to get a response from Groq
                     try:
                         chat_completion = client.chat.completions.create(
                             messages=[
@@ -205,8 +186,8 @@ if st.button("Get Answer"):
                                 },
                             ],
                             model="llama3-8b-8192",
-                            temperature=0.2,  # Lower temperature for more focused answers
-                            max_tokens=300, # Limit response length
+                            temperature=0.2,  
+                            max_tokens=300, 
                         )
                         response = chat_completion.choices[0].message.content
                         st.success(response)
