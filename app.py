@@ -33,9 +33,9 @@ import streamlit as st
 
 # Function to add responsive background and custom styling
 def set_background():
-    desktop_image_path = "/content/9743528.png" # Assuming your image is here
+    desktop_image_path = "image.png" # Assuming your image is here
     # Replace "mobile_bg.jpg" with your actual mobile background image path if needed
-    mobile_image_path = "/content/mobile_bg.jpg" # Example path
+    mobile_image_path = "mobile_bg.jpg" # Example path
 
     desktop_image = ""
     mobile_image = ""
