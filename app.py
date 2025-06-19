@@ -12,7 +12,7 @@ import streamlit as st
 def set_background():
     with open("image.png", "rb") as desktop_file:
         desktop_image = base64.b64encode(desktop_file.read()).decode()
-    with open("mobile_bg.png", "rb") as mobile_file:
+    with open("mobile_bg.jpg", "rb") as mobile_file:
         mobile_image = base64.b64encode(mobile_file.read()).decode()
 
     st.markdown(
