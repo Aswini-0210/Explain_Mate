@@ -61,15 +61,13 @@ def set_background():
         .center-content {{
             text-align: center;
         }}
-        /* File uploader styling */
-        .stFileUploader {{
-            border: none;
-            background-color: transparent; /* Dark background color */
-            color: white !important; /* Font color */
-            border-radius: 10px;
-            padding: 5px;
-            font-size: 16px;
-            text-align: center;
+          /* File uploader container styling */
+        div[data-testid="stFileUploader"] {{
+            background-color: transparent !important; /* Removes white background */
+            color: white !important; /* Ensures text inside is white */
+            border: 2px dashed #ffffff; /* Optional: Adds a dashed white border */
+            border-radius: 10px; /* Rounded corners */
+            padding: 10px; /* Padding inside the uploader */
         }}
         /* Styling the uploaded file display */
         div.uploadedFile {{
