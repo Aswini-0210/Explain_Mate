@@ -1,19 +1,3 @@
-from IPython import get_ipython
-from IPython.display import display
-import os
-from dotenv import load_dotenv
-import os
-
-dotenv_path = os.path.join(os.getcwd(), ".env")
-if os.path.exists(dotenv_path):
-    load_dotenv(dotenv_path)
-else:
-    if not os.getenv("GROQ_API_KEY"):
-        print("Warning: .env file not found and GROQ_API_KEY environment variable is not set.")
-        print("Please add a .env file with GROQ_API_KEY=your_actual_api_key_here or set the environment variable.")
-
-api_key = os.getenv("GROQ_API_KEY")
-
 import base64
 import fitz  # PyMuPDF
 from sentence_transformers import SentenceTransformer
@@ -23,6 +7,7 @@ from groq import Groq
 import os
 import streamlit as st
 
+# Function to set background and custom styles
 def set_background():
     desktop_image_path = "image.png" 
     mobile_image_path = "mobile_bg.jpg" 
@@ -49,7 +34,7 @@ def set_background():
             mobile_image = ""
     else:
         st.warning(f"Mobile background image not found at {mobile_image_path}. Using desktop background for mobile.")
-        mobile_image = desktop_image # Use desktop image as a fallback for mobile
+        mobile_image = desktop_image 
 
     st.markdown(
         f"""
@@ -60,7 +45,7 @@ def set_background():
             background-position: center center;
             background-repeat: no-repeat;
             background-attachment: fixed;
-             background-color: #000;
+            background-color: #000;
         }}
         @media only screen and (max-width: 768px) {{
             .stApp {{
@@ -69,7 +54,7 @@ def set_background():
                 background-position: center center;
                 background-repeat: no-repeat;
                 background-attachment: scroll;
-                 background-color: #000;
+                background-color: #000;
             }}
         }}
         /* Center content styling */
@@ -79,11 +64,22 @@ def set_background():
         /* File uploader styling */
         .stFileUploader {{
             border: none;
-            background-color: #fff;
-            background-color: #000;
-            color: black !important;
+            background-color: #000; /* Dark background color */
+            color: white !important; /* Font color */
             border-radius: 10px;
             padding: 10px;
+            font-size: 16px;
+            text-align: center;
+        }}
+        /* Styling the uploaded file display */
+        div.uploadedFile {{
+            background-color: #000; /* Dark background */
+            color: white !important; /* White text color for visibility */
+            font-size: 16px; /* Adjust font size */
+            border-radius: 10px; /* Rounded corners */
+            padding: 10px; /* Add some padding */
+            margin-top: 10px; /* Add space above the file display */
+            text-align: center; /* Center-align the file name */
         }}
         /* Button styling */
         div.stButton > button:first-child {{
@@ -103,8 +99,10 @@ def set_background():
         unsafe_allow_html=True
     )
 
+# Set the background
 set_background()
 
+# Function to extract text from a PDF file object
 def extract_text_from_pdf(pdf_file_path):
     try:
         doc = fitz.open(pdf_file_path)
@@ -116,9 +114,11 @@ def extract_text_from_pdf(pdf_file_path):
         st.error(f"Error extracting text from PDF {pdf_file_path}: {e}")
         return ""
 
+# Load the sentence transformer model
 model_name = "all-MiniLM-L6-v2"
 model = SentenceTransformer(model_name)
 
+# Initialize Groq client with API key from environment variable
 api_key = os.getenv("GROQ_API_KEY")
 if not api_key:
     st.error("The GROQ_API_KEY environment variable is not set. Please set it before running the script.")
@@ -126,7 +126,7 @@ if not api_key:
 
 client = Groq(api_key=api_key)
 
-
+# Streamlit app UI
 st.markdown(
     '<div class="center-content" style="color: white; font-size: 36px; font-weight: bold;">📄 Explain Mate</div>',
     unsafe_allow_html=True
@@ -162,28 +162,26 @@ if st.button("Get Answer"):
             f.write(pdf_file.getbuffer())
 
         pdf_content = extract_text_from_pdf(temp_pdf_path)
-        os.remove(temp_pdf_path) 
+        os.remove(temp_pdf_path)
 
         if not pdf_content:
             st.error("Could not extract text from the PDF.")
         else:
-            chunk_size = 200  # Increased chunk size slightly for more context per chunk
+            chunk_size = 200  # Chunk size for splitting text
             words = pdf_content.split()
             chunks = [" ".join(words[i:i + chunk_size]) for i in range(0, len(words), chunk_size)]
 
             if not chunks:
                 st.error("Could not split the PDF content into meaningful chunks.")
             else:
-                embeddings = model.encode(chunks, convert_to_numpy=True) # Ensure numpy array for FAISS
+                embeddings = model.encode(chunks, convert_to_numpy=True) 
                 dimension = embeddings.shape[1]
                 index = faiss.IndexFlatL2(dimension)
                 index.add(embeddings)
 
-
                 query_embedding = model.encode([question], convert_to_numpy=True)
 
-
-                k = min(5, len(chunks)) # Get up to 5 most relevant chunks
+                k = min(5, len(chunks)) 
                 distances, indices = index.search(query_embedding, k=k)
                 context_chunks = [chunks[i] for i in indices[0]]
                 context = " ".join(context_chunks)
@@ -196,16 +194,16 @@ if st.button("Get Answer"):
                             messages=[
                                 {
                                     "role": "system",
-                                    "content": "You are a helpful assistant that answers questions based *only* on the provided context from a PDF. Be concise and directly address the user's question. Do not include information that is not present in the context. If the answer is not found in the context, state that you cannot answer based on the provided information.",
+                                    "content": "You are a helpful assistant that answers questions based only on the provided context from a PDF. Be concise and directly address the user's question.",
                                 },
                                 {
                                     "role": "user",
-                                    "content": f"Based on the following context, answer the question:\\n\\nContext: {context}\\n\\nQuestion: {question}",
+                                    "content": f"Based on the following context, answer the question:\n\nContext: {context}\n\nQuestion: {question}",
                                 },
                             ],
                             model="llama3-8b-8192",
-                            temperature=0.2,  
-                            max_tokens=300, 
+                            temperature=0.2,
+                            max_tokens=300,
                         )
                         response = chat_completion.choices[0].message.content
                         st.success(response)
