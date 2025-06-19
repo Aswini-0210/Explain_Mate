@@ -4,25 +4,13 @@ from sentence_transformers import SentenceTransformer
 import faiss
 import numpy as np
 from groq import Groq
-from dotenv import load_dotenv
 import os
 import streamlit as st
 
-# Load environment variables
-dotenv_path = ".env"
-if os.path.exists(dotenv_path):
-    load_dotenv(dotenv_path)
-
-# API Key Validation
-api_key = os.getenv("GROQ_API_KEY")
-if not api_key:
-    st.error("The GROQ_API_KEY environment variable is not set. Please set it before running the script.")
-    st.stop()
-
-# Set up the background and styles
+# Function to set background and custom styles
 def set_background():
-    desktop_image_path = "image.png"
-    mobile_image_path = "mobile_bg.jpg"
+    desktop_image_path = "image.png" 
+    mobile_image_path = "mobile_bg.jpg" 
 
     desktop_image = ""
     mobile_image = ""
@@ -46,7 +34,7 @@ def set_background():
             mobile_image = ""
     else:
         st.warning(f"Mobile background image not found at {mobile_image_path}. Using desktop background for mobile.")
-        mobile_image = desktop_image
+        mobile_image = desktop_image 
 
     st.markdown(
         f"""
@@ -69,20 +57,30 @@ def set_background():
                 background-color: #000;
             }}
         }}
+        /* Center content styling */
+        .center-content {{
+            text-align: center;
+        }}
+        /* File uploader container styling */
         div[data-testid="stFileUploader"] {{
             background-color: transparent !important;
             color: white !important;
             border: none !important;
+            outline: none !important;
             border-radius: 10px;
             padding: 10px;
         }}
-        div[data-testid="stUploadedFile"] {{
-            background-color: transparent !important;
-            color: white !important;
+        /* Styling the uploaded file display */
+        div.uploadedFile {{
+            background-color: transparent;
+            color: black !important;
             font-size: 16px;
+            border-radius: 10px;
             padding: 5px;
             margin-top: 10px;
+            text-align: center;
         }}
+        /* Button styling */
         div.stButton > button:first-child {{
             background-color: red;
             color: white;
@@ -95,21 +93,31 @@ def set_background():
             background-color: darkred;
             color: white;
         }}
+        /* Success message styling */
+        div[data-testid="stMarkdownContainer"] div.stAlert {{
+            background-color: green !important;
+            color: white !important;
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 16px;
+            text-align: left;
+        }}
         </style>
         """,
         unsafe_allow_html=True
     )
 
+# Set the background
 set_background()
 
-# Extract text from PDF
+# Function to extract text from a PDF file object
 def extract_text_from_pdf(pdf_file_path):
     try:
         doc = fitz.open(pdf_file_path)
         text = ""
         for page in doc:
             text += page.get_text()
-        return text.strip()
+        return text
     except Exception as e:
         st.error(f"Error extracting text from PDF {pdf_file_path}: {e}")
         return ""
@@ -118,18 +126,44 @@ def extract_text_from_pdf(pdf_file_path):
 model_name = "all-MiniLM-L6-v2"
 model = SentenceTransformer(model_name)
 
+# Initialize Groq client with API key from environment variable
+api_key = os.getenv("GROQ_API_KEY")
+if not api_key:
+    st.error("The GROQ_API_KEY environment variable is not set. Please set it before running the script.")
+    st.stop()
+
+client = Groq(api_key=api_key)
+
 # Streamlit app UI
-st.markdown("<div style='text-align: center; color: white; font-size: 36px;'>📄 Explain Mate</div>", unsafe_allow_html=True)
-st.markdown("<div style='text-align: center; color: white; font-size: 18px;'>✨ Upload a document and let me handle the questions. 🎉</div>", unsafe_allow_html=True)
+st.markdown(
+    '<div class="center-content" style="color: white; font-size: 36px; font-weight: bold;">📄 Explain Mate</div>',
+    unsafe_allow_html=True
+)
+st.markdown(
+    '<div class="center-content" style="color: white; font-size: 18px;">✨ Your friendly PDF assistant! Upload a document and let me handle the questions. 🎉</div>',
+    unsafe_allow_html=True
+)
 
 pdf_file = st.file_uploader("", type="pdf")
+st.markdown(
+    """
+    <style>
+    label {
+        color: white !important;
+        font-size: 16px;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 question = st.text_input("Ask your question")
 
 if st.button("Get Answer"):
     if pdf_file is None:
         st.error("Please upload a PDF file.")
-    elif not question.strip():
-        st.error("Please enter a valid question.")
+    elif not question:
+        st.error("Please enter a question.")
     else:
         temp_pdf_path = "temp.pdf"
         with open(temp_pdf_path, "wb") as f:
@@ -139,9 +173,9 @@ if st.button("Get Answer"):
         os.remove(temp_pdf_path)
 
         if not pdf_content:
-            st.error("Could not extract content from the PDF.")
+            st.error("Could not extract text from the PDF.")
         else:
-            chunk_size = 200
+            chunk_size = 200  # Chunk size for splitting text
             words = pdf_content.split()
             chunks = [" ".join(words[i:i + chunk_size]) for i in range(0, len(words), chunk_size)]
 
@@ -155,7 +189,7 @@ if st.button("Get Answer"):
 
                 query_embedding = model.encode([question], convert_to_numpy=True)
 
-                k = min(5, len(chunks))
+                k = min(5, len(chunks)) 
                 distances, indices = index.search(query_embedding, k=k)
                 context_chunks = [chunks[i] for i in indices[0]]
                 context = " ".join(context_chunks)
@@ -164,12 +198,11 @@ if st.button("Get Answer"):
                     st.error("Could not find relevant context in the PDF for your question.")
                 else:
                     try:
-                        client = Groq(api_key=api_key)
                         chat_completion = client.chat.completions.create(
                             messages=[
                                 {
                                     "role": "system",
-                                    "content": "You are a helpful assistant that answers questions based only on the provided context.",
+                                    "content": "You are a helpful assistant that answers questions based only on the provided context from a PDF. Be concise and directly address the user's question.",
                                 },
                                 {
                                     "role": "user",
@@ -185,4 +218,8 @@ if st.button("Get Answer"):
                     except Exception as e:
                         st.error(f"An error occurred while generating the response: {e}")
 
-st.markdown("<div style='text-align: center; color: white;'>Made with ❤️ by <b>Aswini</b></div>", unsafe_allow_html=True)
+st.markdown("---")
+st.markdown(
+    "<div style='text-align: center;color: white;'>Made with ❤️ by <b>Aswini</b></div>",
+    unsafe_allow_html=True
+)
