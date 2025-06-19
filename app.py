@@ -16,11 +16,19 @@ def set_background():
         f"""
         <style>
         .stApp {{
-            background-image: url("data:image/jpeg;base64,{encoded_image}");
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            
+            background-image: url("data:image/png;base64,{encoded_image}");
+            background-size: cover; /* Ensures the image covers the entire screen */
+            background-position: center; /* Centers the image */
+            background-repeat: no-repeat; /* Prevents repeating */
+            height: 100%;
+            min-height: 100vh; /* Ensures it covers the viewport height */
+        }}
+
+        /* Responsive design for smaller screens */
+        @media (max-width: 768px) {{
+            .stApp {{
+                background-size: contain; /* Adjust size to fit smaller screens */
+            }}
         }}
         /* Center content styling */
         .center-content {{
