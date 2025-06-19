@@ -1,55 +1,19 @@
-from IPython import get_ipython
-from IPython.display import display
-import os
-from dotenv import load_dotenv
-import os
-
-dotenv_path = os.path.join(os.getcwd(), ".env")
-if os.path.exists(dotenv_path):
-    load_dotenv(dotenv_path)
-else:
-    if not os.getenv("GROQ_API_KEY"):
-        print("Warning: .env file not found and GROQ_API_KEY environment variable is not set.")
-        print("Please add a .env file with GROQ_API_KEY=your_actual_api_key_here or set the environment variable.")
-
-api_key = os.getenv("GROQ_API_KEY")
-
 import base64
 import fitz  # PyMuPDF
 from sentence_transformers import SentenceTransformer
 import faiss
 import numpy as np
-from groq import Groq
 import os
 import streamlit as st
+import torch
 
+
+# Function to add responsive background and custom styling
 def set_background():
-    desktop_image_path = "image.png" 
-    mobile_image_path = "mobile_bg.jpg" 
-
-    desktop_image = ""
-    mobile_image = ""
-
-    if os.path.exists(desktop_image_path):
-        try:
-            with open(desktop_image_path, "rb") as desktop_file:
-                desktop_image = base64.b64encode(desktop_file.read()).decode()
-        except Exception as e:
-            st.error(f"Error reading desktop background image: {e}")
-            desktop_image = ""
-    else:
-        st.warning(f"Desktop background image not found at {desktop_image_path}. Using default background.")
-
-    if os.path.exists(mobile_image_path):
-        try:
-            with open(mobile_image_path, "rb") as mobile_file:
-                mobile_image = base64.b64encode(mobile_file.read()).decode()
-        except Exception as e:
-            st.error(f"Error reading mobile background image: {e}")
-            mobile_image = ""
-    else:
-        st.warning(f"Mobile background image not found at {mobile_image_path}. Using desktop background for mobile.")
-        mobile_image = desktop_image # Use desktop image as a fallback for mobile
+    with open("desktop_image.png", "rb") as desktop_file:
+        desktop_image = base64.b64encode(desktop_file.read()).decode()
+    with open("mobile_image.png", "rb") as mobile_file:
+        mobile_image = base64.b64encode(mobile_file.read()).decode()
 
     st.markdown(
         f"""
@@ -60,7 +24,6 @@ def set_background():
             background-position: center center;
             background-repeat: no-repeat;
             background-attachment: fixed;
-             background-color: #000;
         }}
         @media only screen and (max-width: 768px) {{
             .stApp {{
@@ -69,7 +32,6 @@ def set_background():
                 background-position: center center;
                 background-repeat: no-repeat;
                 background-attachment: scroll;
-                 background-color: #000;
             }}
         }}
         /* Center content styling */
@@ -79,7 +41,7 @@ def set_background():
         /* File uploader styling */
         .stFileUploader {{
             border: none;
-            background-color: #000;
+            background-color: #fff;
             color: black !important;
             border-radius: 10px;
             padding: 10px;
@@ -119,8 +81,8 @@ def set_background():
         unsafe_allow_html=True
     )
 
-set_background()
 
+# Function to extract text from a PDF
 def extract_text_from_pdf(pdf_file_path):
     try:
         doc = fitz.open(pdf_file_path)
@@ -132,39 +94,42 @@ def extract_text_from_pdf(pdf_file_path):
         st.error(f"Error extracting text from PDF {pdf_file_path}: {e}")
         return ""
 
+
+# Function to summarize response
+def summarize_response(response, max_length=500):
+    return response[:max_length] + "..." if len(response) > max_length else response
+
+
+# Initialize the SentenceTransformer model
+def initialize_model(model_name):
+    try:
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        model = SentenceTransformer(model_name)
+        if hasattr(model, "to_empty"):
+            model = model.to_empty()
+        model.to(device)
+        # Test model loading
+        _ = model.encode(["Test input"])
+        return model, device
+    except Exception as e:
+        st.error(f"Model initialization failed: {e}")
+        st.stop()
+
+
+# Load the model
 model_name = "all-MiniLM-L6-v2"
-model = SentenceTransformer(model_name)
-
-api_key = os.getenv("GROQ_API_KEY")
-if not api_key:
-    st.error("The GROQ_API_KEY environment variable is not set. Please set it before running the script.")
-    st.stop()
-
-client = Groq(api_key=api_key)
+model, device = initialize_model(model_name)
 
 
-st.markdown(
-    '<div class="center-content" style="color: white; font-size: 36px; font-weight: bold;">📄 Explain Mate</div>',
-    unsafe_allow_html=True
-)
-st.markdown(
-    '<div class="center-content" style="color: white; font-size: 18px;">✨ Your friendly PDF assistant! Upload a document and let me handle the questions. 🎉</div>',
-    unsafe_allow_html=True
-)
+# Call the background function
+set_background()
 
+# Streamlit app
+st.markdown('<div class="center-content"><h1>📄 Explain Mate</h1></div>', unsafe_allow_html=True)
+st.markdown('<div class="center-content"><h4>✨ Your friendly PDF assistant! Upload a document and let me handle the questions. 🎉</h4></div>', unsafe_allow_html=True)
+
+# File upload and question handling
 pdf_file = st.file_uploader("", type="pdf")
-st.markdown(
-    """
-    <style>
-    label {
-        color: white !important;
-        font-size: 16px;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
 question = st.text_input("Ask your question")
 
 if st.button("Get Answer"):
@@ -173,65 +138,58 @@ if st.button("Get Answer"):
     elif not question:
         st.error("Please enter a question.")
     else:
-        temp_pdf_path = "temp.pdf"
-        with open(temp_pdf_path, "wb") as f:
+        with open("temp.pdf", "wb") as f:
             f.write(pdf_file.getbuffer())
-
-        pdf_content = extract_text_from_pdf(temp_pdf_path)
-        os.remove(temp_pdf_path) 
-
+        pdf_content = extract_text_from_pdf("temp.pdf")
+        os.remove("temp.pdf")
+        
         if not pdf_content:
             st.error("Could not extract text from the PDF.")
         else:
+            # Display extracted PDF content
             st.markdown(f'<div class="pdf-text">{pdf_content}</div>', unsafe_allow_html=True)
-            chunk_size = 200  # Increased chunk size slightly for more context per chunk
+            
             words = pdf_content.split()
-            chunks = [" ".join(words[i:i + chunk_size]) for i in range(0, len(words), chunk_size)]
-
+            chunks = [" ".join(words[i:i + 100]) for i in range(0, len(words), 100)]
+            
             if not chunks:
-                st.error("Could not split the PDF content into meaningful chunks.")
+                st.error("No meaningful chunks found in the PDF content.")
             else:
-                embeddings = model.encode(chunks, convert_to_numpy=True) # Ensure numpy array for FAISS
-                dimension = embeddings.shape[1]
-                index = faiss.IndexFlatL2(dimension)
-                index.add(embeddings)
+                try:
+                    # Create embeddings for chunks
+                    embeddings = model.encode(chunks)
+                    dimension = embeddings.shape[1]
+                    index = faiss.IndexFlatL2(dimension)
+                    index.add(embeddings)
 
-              
-                query_embedding = model.encode([question], convert_to_numpy=True)
+                    # Generate embedding for the user query
+                    query_embedding = model.encode([question])
 
-              
-                k = min(5, len(chunks)) # Get up to 5 most relevant chunks
-                distances, indices = index.search(query_embedding, k=k)
-                context_chunks = [chunks[i] for i in indices[0]]
-                context = " ".join(context_chunks)
+                    # Search for relevant chunks
+                    k = min(5, len(chunks))
+                    distances, indices = index.search(query_embedding, k=k)
+                    context_chunks = [chunks[i] for i in indices[0]]
+                    context = " ".join(context_chunks)
 
-                if not context:
-                    st.error("Could not find relevant context in the PDF for your question.")
-                else:
-                    try:
+                    if not context:
+                        st.error("No relevant context found for your question.")
+                    else:
+                        # Generate response from the model
                         chat_completion = client.chat.completions.create(
                             messages=[
-                                {
-                                    "role": "system",
-                                    "content": "You are a helpful assistant that answers questions based *only* on the provided context from a PDF. Be concise and directly address the user's question. Do not include information that is not present in the context. If the answer is not found in the context, state that you cannot answer based on the provided information.",
-                                },
-                                {
-                                    "role": "user",
-                                    "content": f"Based on the following context, answer the question:\\n\\nContext: {context}\\n\\nQuestion: {question}",
-                                },
+                                {"role": "system", "content": "You are a helpful assistant. Provide clear and concise answers based on the provided context."},
+                                {"role": "user", "content": f"Context: {context}\n\nQuestion: {question}"}
                             ],
                             model="llama3-8b-8192",
-                            temperature=0.2,  
-                            max_tokens=300, 
                         )
                         response = chat_completion.choices[0].message.content
+                        # Display the generated answer
                         st.markdown(f'<div class="answer-box">{response.strip()}</div>', unsafe_allow_html=True)
-                    except Exception as e:
-                        st.error(f"An error occurred while generating the response: {e}")
+                except Exception as e:
+                    st.error(f"An error occurred: {e}")
 
 st.markdown("---")
 st.markdown(
-    "<div style='text-align: center;color: white;'>Made with ❤️ by <b>Aswini</b></div>",
+    "<div style='text-align: center;'>Made with ❤️ by <b>Aswini</b></div>",
     unsafe_allow_html=True
 )
-
