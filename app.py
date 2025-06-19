@@ -226,7 +226,6 @@ if st.button("Get Answer"):
                         )
                         response = chat_completion.choices[0].message.content
                         st.markdown(f'<div class="answer-box">{response.strip()}</div>', unsafe_allow_html=True)
-                except Exception as e:
                     except Exception as e:
                         st.error(f"An error occurred while generating the response: {e}")
 
