@@ -8,15 +8,18 @@ import os
 import streamlit as st
 
 
-# Function to add background with an infographic
+# Function to add responsive background with different images for desktop and mobile
 def set_background():
-    with open("image.png", "rb") as file:
-        encoded_image = base64.b64encode(file.read()).decode()
+    with open("image.png", "rb") as desktop_file:
+        desktop_image = base64.b64encode(desktop_file.read()).decode()
+    with open("mobile_bg.png", "rb") as mobile_file:
+        mobile_image = base64.b64encode(mobile_file.read()).decode()
+
     st.markdown(
         f"""
         <style>
         .stApp {{
-            background-image: url("data:image/jpeg;base64,{encoded_image}");
+            background-image: url("data:image/jpeg;base64,{desktop_image}");
             background-size: cover;
             background-position: center center;
             background-repeat: no-repeat;
@@ -24,8 +27,11 @@ def set_background():
         }}
         @media only screen and (max-width: 768px) {{
             .stApp {{
-                background-size: 100% auto; /* Ensures vertical fit */
-                background-attachment: scroll; /* Adjusts for scrolling on mobile */
+                background-image: url("data:image/jpeg;base64,{mobile_image}");
+                background-size: cover;
+                background-position: center center;
+                background-repeat: no-repeat;
+                background-attachment: scroll;
             }}
         }}
         /* Center content styling */
