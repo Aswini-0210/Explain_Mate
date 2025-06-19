@@ -151,6 +151,6 @@ if st.button("Get Answer"):
                         st.error(f"An error occurred while generating the response: {e}")
 st.markdown("---")
 st.markdown(
-    "<div style='text-align: center;'>Made with ❤️ by <b>Your Name</b></div>",
+    "<div style='text-align: center;'>Made with ❤️ by <b>Aswini</b></div>",
     unsafe_allow_html=True
 )
