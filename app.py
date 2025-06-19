@@ -102,25 +102,6 @@ def set_background():
 
 set_background()
 
-# Display response with a solid background
-def display_answer_with_background(answer):
-    st.markdown(
-        f"""
-        <div style="
-            background-color: #0d3b0d;  /* Dark green solid background */
-            color: white;              /* White text color */
-            padding: 15px;             /* Padding around the content */
-            border-radius: 10px;       /* Rounded corners */
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Optional shadow for depth */
-            font-size: 16px;           /* Adjust font size */
-            line-height: 1.5;          /* Better line spacing */
-        ">
-            {answer}
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
 # Extract text from PDF
 def extract_text_from_pdf(pdf_file_path):
     try:
@@ -154,6 +135,23 @@ st.markdown(
     unsafe_allow_html=True
 )
 question = st.text_input("Ask your question")
+def display_answer_with_background(answer):
+    st.markdown(
+        f"""
+        <div style="
+            background-color: #0d3b0d;  /* Dark green solid background */
+            color: white;              /* White text color */
+            padding: 15px;             /* Padding around the content */
+            border-radius: 10px;       /* Rounded corners */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Optional shadow for depth */
+            font-size: 16px;           /* Adjust font size */
+            line-height: 1.5;          /* Better line spacing */
+        ">
+            {answer}
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
 if st.button("Get Answer"):
     if pdf_file is None:
@@ -216,3 +214,4 @@ if st.button("Get Answer"):
                         st.error(f"An error occurred while generating the response: {e}")
 
 st.markdown("<div style='text-align: center; color: white;'>Made with ❤️ by <b>Aswini</b></div>", unsafe_allow_html=True)
+
