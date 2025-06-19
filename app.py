@@ -120,7 +120,7 @@ model = SentenceTransformer(model_name)
 
 # Streamlit app UI
 st.markdown("<div style='text-align: center; color: white; font-size: 36px;'>📄 Explain Mate</div>", unsafe_allow_html=True)
-st.markdown("<div style='text-align: center; color: white; font-size: 18px;'>✨ Upload a document and let me handle the questions. 🎉</div>", unsafe_allow_html=True)
+st.markdown("<div style='text-align: center; color: white; font-size: 18px;'>✨ Your friendly PDF assistant! Upload a document and let me handle the questions. 🎉</div>", unsafe_allow_html=True)
 
 pdf_file = st.file_uploader("", type="pdf")
 st.markdown(
