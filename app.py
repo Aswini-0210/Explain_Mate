@@ -67,17 +67,17 @@ def set_background():
             background-color: #fff; /* Dark background color */
             color: white !important; /* Font color */
             border-radius: 10px;
-            padding: 10px;
+            padding: 5px;
             font-size: 16px;
             text-align: center;
         }}
         /* Styling the uploaded file display */
         div.uploadedFile {{
             background-color: #000; /* Dark background */
-            color: white !important; /* White text color for visibility */
+            color: black !important; /* White text color for visibility */
             font-size: 16px; /* Adjust font size */
             border-radius: 10px; /* Rounded corners */
-            padding: 10px; /* Add some padding */
+            padding: 5px; /* Add some padding */
             margin-top: 10px; /* Add space above the file display */
             text-align: center; /* Center-align the file name */
         }}
