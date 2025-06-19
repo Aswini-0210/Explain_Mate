@@ -95,19 +95,18 @@ def extract_text_from_pdf(pdf_file_path):
         return ""
 
 
-# Function to summarize response
-def summarize_response(response, max_length=500):
-    return response[:max_length] + "..." if len(response) > max_length else response
-
-
-# Initialize the SentenceTransformer model
+# Initialize the SentenceTransformer model with proper device handling
 def initialize_model(model_name):
     try:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         model = SentenceTransformer(model_name)
+        
+        # Properly handle the `to_empty` method if available
         if hasattr(model, "to_empty"):
-            model = model.to_empty()
-        model.to(device)
+            model = model.to_empty(device=device)
+        else:
+            model.to(device)
+        
         # Test model loading
         _ = model.encode(["Test input"])
         return model, device
