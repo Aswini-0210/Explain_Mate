@@ -17,21 +17,24 @@ def set_background():
         <style>
         .stApp {{
             background-image: url("data:image/png;base64,{encoded_image}");
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
+            background-size: cover; /* Ensures the image covers the entire screen */
+            background-position: center; /* Centers the image */
+            background-repeat: no-repeat; /* Prevents repeating */
             height: 100%;
-            min-height: 100vh;
+            min-height: 100vh; /* Ensures it covers the viewport height */
         }}
 
+        /* Responsive design for smaller screens */
         @media (max-width: 768px) {{
             .stApp {{
-                background-size: contain;
+                background-size: contain; /* Adjust size to fit smaller screens */
             }}
         }}
+        /* Center content styling */
         .center-content {{
             text-align: center;
         }}
+        /* File uploader styling */
         .stFileUploader {{
             border: none;
             background-color: #fff;
@@ -39,6 +42,7 @@ def set_background():
             border-radius: 10px;
             padding: 10px;
         }}
+        /* Button styling */
         div.stButton > button:first-child {{
             background-color: red;
             color: white;
@@ -73,20 +77,9 @@ def extract_text_from_pdf(pdf_file_path):
         return ""
 
 
-# Safe model loading function
-def load_model_safely(model_name):
-    try:
-        # Ensure the model loads explicitly on CPU
-        model = SentenceTransformer(model_name, device="cpu")
-        return model
-    except Exception as e:
-        st.error(f"Error loading Sentence Transformer model: {e}")
-        st.stop()
-
-
-# Load the model
+# Load the sentence transformer model
 model_name = "all-MiniLM-L6-v2"
-model = load_model_safely(model_name)
+model = SentenceTransformer(model_name)
 
 # Initialize Groq client with API key from environment variable
 api_key = os.getenv("GROQ_API_KEY")
