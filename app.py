@@ -3,12 +3,12 @@ import fitz  # PyMuPDF
 from sentence_transformers import SentenceTransformer
 import faiss
 import numpy as np
-from groq import Groq
 import os
 import streamlit as st
 import torch
 
-# Function to add responsive background
+
+# Function to add responsive background and custom styling
 def set_background():
     # Assuming desktop_image.png and mobile_image.png exist in the same directory
     with open("image.png", "rb") as desktop_file:
@@ -35,10 +35,36 @@ def set_background():
                 background-attachment: scroll;
             }}
         }}
+        /* Center content styling */
+        .center-content {{
+            text-align: center;
+        }}
+        /* File uploader styling */
+        .stFileUploader {{
+            border: none;
+            background-color: #fff;
+            color: black !important;
+            border-radius: 10px;
+            padding: 10px;
+        }}
+        /* Button styling */
+        div.stButton > button:first-child {{
+            background-color: red;
+            color: white;
+            border-radius: 5px;
+            border: none;
+            font-size: 16px;
+            padding: 10px 20px;
+        }}
+        div.stButton > button:first-child:hover {{
+            background-color: darkred;
+            color: white;
+        }}
         </style>
         """,
         unsafe_allow_html=True
     )
+
 
 # Initialize the SentenceTransformer model
 model_name = "all-MiniLM-L6-v2"
@@ -47,11 +73,6 @@ model = SentenceTransformer(model_name)
 # Ensure the model is on the correct device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model.to(device)
-
-# Check for meta tensors
-for name, param in model.named_parameters():
-    if param.device.type == "meta":
-        raise RuntimeError(f"Parameter {name} is on meta device. Initialization failed.")
 
 # Function to extract text from a PDF
 def extract_text_from_pdf(pdf_file_path):
@@ -114,3 +135,8 @@ if st.button("Get Answer"):
 
             st.success(f"Context for your question: {context}")
 
+st.markdown("---")
+st.markdown(
+    "<div style='text-align: center;'>Made with ❤️ by <b>Aswini</b></div>",
+    unsafe_allow_html=True
+)
