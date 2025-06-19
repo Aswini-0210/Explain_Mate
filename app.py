@@ -1,19 +1,65 @@
+from IPython import get_ipython
+from IPython.display import display
+import os
+
+from dotenv import load_dotenv
+import os
+
+dotenv_path = os.path.join(os.getcwd(), ".env")
+if os.path.exists(dotenv_path):
+    load_dotenv(dotenv_path)
+else:
+    # If .env is not found, check if the API key is set as an environment variable directly
+    if not os.getenv("GROQ_API_KEY"):
+        print("Warning: .env file not found and GROQ_API_KEY environment variable is not set.")
+        print("Please add a .env file with GROQ_API_KEY=your_actual_api_key_here or set the environment variable.")
+
+
+# Access the API key
+api_key = os.getenv("GROQ_API_KEY")
+# print(api_key) # Avoid printing API keys in production
+
+# %%
 import base64
 import fitz  # PyMuPDF
 from sentence_transformers import SentenceTransformer
 import faiss
 import numpy as np
+from groq import Groq
 import os
 import streamlit as st
-import torch
+# import torch # Removed unused import
 
 
 # Function to add responsive background and custom styling
 def set_background():
-    with open("image.png", "rb") as desktop_file:
-        desktop_image = base64.b64encode(desktop_file.read()).decode()
-    with open("mobile_bg.jpg", "rb") as mobile_file:
-        mobile_image = base64.b64encode(mobile_file.read()).decode()
+    desktop_image_path = "/content/9743528.png" # Assuming your image is here
+    # Replace "mobile_bg.jpg" with your actual mobile background image path if needed
+    mobile_image_path = "/content/mobile_bg.jpg" # Example path
+
+    desktop_image = ""
+    mobile_image = ""
+
+    if os.path.exists(desktop_image_path):
+        try:
+            with open(desktop_image_path, "rb") as desktop_file:
+                desktop_image = base64.b64encode(desktop_file.read()).decode()
+        except Exception as e:
+            st.error(f"Error reading desktop background image: {e}")
+            desktop_image = ""
+    else:
+        st.warning(f"Desktop background image not found at {desktop_image_path}. Using default background.")
+
+    if os.path.exists(mobile_image_path):
+        try:
+            with open(mobile_image_path, "rb") as mobile_file:
+                mobile_image = base64.b64encode(mobile_file.read()).decode()
+        except Exception as e:
+            st.error(f"Error reading mobile background image: {e}")
+            mobile_image = ""
+    else:
+        st.warning(f"Mobile background image not found at {mobile_image_path}. Using desktop background for mobile.")
+        mobile_image = desktop_image # Use desktop image as a fallback for mobile
 
     st.markdown(
         f"""
@@ -65,7 +111,10 @@ def set_background():
     )
 
 
-# Function to extract text from a PDF
+# Call the background function
+set_background()
+
+# Function to extract text from a PDF file object
 def extract_text_from_pdf(pdf_file_path):
     try:
         doc = fitz.open(pdf_file_path)
@@ -78,40 +127,24 @@ def extract_text_from_pdf(pdf_file_path):
         return ""
 
 
-# Function to summarize response
-def summarize_response(response, max_length=500):
-    return response[:max_length] + "..." if len(response) > max_length else response
-
-
-# Initialize the SentenceTransformer model
-def initialize_model(model_name):
-    try:
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        model = SentenceTransformer(model_name)
-        if hasattr(model, "to_empty"):
-            model = model.to_empty()
-        model.to(device)
-        # Test model loading
-        _ = model.encode(["Test input"])
-        return model, device
-    except Exception as e:
-        st.error(f"Model initialization failed: {e}")
-        st.stop()
-
-
-# Load the model
+# Load the sentence transformer model
+# Using a smaller model for potentially faster inference
 model_name = "all-MiniLM-L6-v2"
-model, device = initialize_model(model_name)
+model = SentenceTransformer(model_name)
 
+# Initialize Groq client with API key from environment variable
+api_key = os.getenv("GROQ_API_KEY")
+if not api_key:
+    st.error("The GROQ_API_KEY environment variable is not set. Please set it before running the script.")
+    st.stop()
 
-# Call the background function
-set_background()
+client = Groq(api_key=api_key)
 
-# Streamlit app
+# Streamlit app interface
 st.markdown('<div class="center-content"><h1>📄 Explain Mate</h1></div>', unsafe_allow_html=True)
 st.markdown('<div class="center-content"><h4>✨ Your friendly PDF assistant! Upload a document and let me handle the questions. 🎉</h4></div>', unsafe_allow_html=True)
 
-# File upload and question handling
+# File upload section
 pdf_file = st.file_uploader("", type="pdf")
 question = st.text_input("Ask your question")
 
@@ -121,54 +154,68 @@ if st.button("Get Answer"):
     elif not question:
         st.error("Please enter a question.")
     else:
-        with open("temp.pdf", "wb") as f:
+        # Save uploaded PDF as a temporary file
+        temp_pdf_path = "temp.pdf"
+        with open(temp_pdf_path, "wb") as f:
             f.write(pdf_file.getbuffer())
-        pdf_content = extract_text_from_pdf("temp.pdf")
-        os.remove("temp.pdf")
-        
+
+        # Extract text from the uploaded PDF
+        pdf_content = extract_text_from_pdf(temp_pdf_path)
+        os.remove(temp_pdf_path)  # Remove temporary file
+
         if not pdf_content:
             st.error("Could not extract text from the PDF.")
         else:
+            # Process the PDF content into chunks and create embeddings
+            chunk_size = 200  # Increased chunk size slightly for more context per chunk
             words = pdf_content.split()
-            chunks = [" ".join(words[i:i + 100]) for i in range(0, len(words), 100)]
-            
+            chunks = [" ".join(words[i:i + chunk_size]) for i in range(0, len(words), chunk_size)]
+
             if not chunks:
-                st.error("No meaningful chunks found in the PDF content.")
+                st.error("Could not split the PDF content into meaningful chunks.")
             else:
-                try:
-                    # Create embeddings for chunks
-                    embeddings = model.encode(chunks)
-                    dimension = embeddings.shape[1]
-                    index = faiss.IndexFlatL2(dimension)
-                    index.add(embeddings)
+                embeddings = model.encode(chunks, convert_to_numpy=True) # Ensure numpy array for FAISS
+                dimension = embeddings.shape[1]
+                index = faiss.IndexFlatL2(dimension)
+                index.add(embeddings)
 
-                    # Generate embedding for the user query
-                    query_embedding = model.encode([question])
+                # Generate embedding for the user query
+                query_embedding = model.encode([question], convert_to_numpy=True)
 
-                    # Search for relevant chunks
-                    k = min(5, len(chunks))
-                    distances, indices = index.search(query_embedding, k=k)
-                    context_chunks = [chunks[i] for i in indices[0]]
-                    context = " ".join(context_chunks)
+                # Search for relevant chunks
+                k = min(5, len(chunks)) # Get up to 5 most relevant chunks
+                distances, indices = index.search(query_embedding, k=k)
+                context_chunks = [chunks[i] for i in indices[0]]
+                context = " ".join(context_chunks)
 
-                    if not context:
-                        st.error("No relevant context found for your question.")
-                    else:
-                        # Generate response from the model
+                if not context:
+                    st.error("Could not find relevant context in the PDF for your question.")
+                else:
+                    # Use the context and question to get a response from Groq
+                    try:
                         chat_completion = client.chat.completions.create(
                             messages=[
-                                {"role": "system", "content": "You are a helpful assistant. Provide clear and concise answers based on the provided context."},
-                                {"role": "user", "content": f"Context: {context}\n\nQuestion: {question}"}
+                                {
+                                    "role": "system",
+                                    "content": "You are a helpful assistant that answers questions based *only* on the provided context from a PDF. Be concise and directly address the user's question. Do not include information that is not present in the context. If the answer is not found in the context, state that you cannot answer based on the provided information.",
+                                },
+                                {
+                                    "role": "user",
+                                    "content": f"Based on the following context, answer the question:\\n\\nContext: {context}\\n\\nQuestion: {question}",
+                                },
                             ],
                             model="llama3-8b-8192",
+                            temperature=0.2,  # Lower temperature for more focused answers
+                            max_tokens=300, # Limit response length
                         )
                         response = chat_completion.choices[0].message.content
-                        st.success(summarize_response(response.strip()))
-                except Exception as e:
-                    st.error(f"An error occurred: {e}")
+                        st.success(response)
+                    except Exception as e:
+                        st.error(f"An error occurred while generating the response: {e}")
 
 st.markdown("---")
 st.markdown(
-    "<div style='text-align: center;'>Made with ❤️ by <b>Aswini</b></div>",
+    "<div style='text-align: center;'>Made with ❤️ by <b>Your Name</b></div>",
     unsafe_allow_html=True
 )
+
