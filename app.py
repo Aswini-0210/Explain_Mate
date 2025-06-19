@@ -65,14 +65,6 @@ def set_background():
     )
 
 
-# Initialize the SentenceTransformer model
-model_name = "all-MiniLM-L6-v2"
-model = SentenceTransformer(model_name)
-
-# Ensure the model is on the correct device
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model.to(device)
-
 # Function to extract text from a PDF
 def extract_text_from_pdf(pdf_file_path):
     try:
@@ -89,6 +81,27 @@ def extract_text_from_pdf(pdf_file_path):
 # Function to summarize response
 def summarize_response(response, max_length=500):
     return response[:max_length] + "..." if len(response) > max_length else response
+
+
+# Initialize the SentenceTransformer model
+def initialize_model(model_name):
+    try:
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        model = SentenceTransformer(model_name)
+        if hasattr(model, "to_empty"):
+            model = model.to_empty()
+        model.to(device)
+        # Test model loading
+        _ = model.encode(["Test input"])
+        return model, device
+    except Exception as e:
+        st.error(f"Model initialization failed: {e}")
+        st.stop()
+
+
+# Load the model
+model_name = "all-MiniLM-L6-v2"
+model, device = initialize_model(model_name)
 
 
 # Call the background function
